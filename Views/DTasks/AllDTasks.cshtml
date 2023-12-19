@@ -1,0 +1,107 @@
+@model IEnumerable<Dsana.Models.DTask>
+@using Microsoft.AspNetCore.Identity
+@using Dsana.Services.Interfaces
+@using Dsana.Models.Enums
+
+@inject UserManager<DSUser> UserManager
+@inject IDSProjectService ProjectService
+
+@{ ViewData["Title"] = "All DTasks";
+                DSUser btUser = await UserManager.GetUserAsync(User);
+}
+
+<h1>All DTasks</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Title)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Description)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Created)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Updated)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Archived)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Project)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DTaskType)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DTaskPriority)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DTaskStatus)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.OwnerUser)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DeveloperUser)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+<tr>
+    <td>
+        @Html.DisplayFor(modelItem => item.Title)
+    </td>
+    <td>
+        @Html.DisplayFor(modelItem => item.Description)
+    </td>
+    <td>
+        @Html.DisplayFor(modelItem => item.Created)
+    </td>
+    <td>
+        @Html.DisplayFor(modelItem => item.Updated)
+    </td>
+    <td>
+        @Html.DisplayFor(modelItem => item.Archived)
+    </td>
+    <td>
+        @Html.DisplayFor(modelItem => item.Project.Name)
+    </td>
+    <td>
+        @Html.DisplayFor(modelItem => item.DTaskType.Name)
+    </td>
+    <td>
+        @Html.DisplayFor(modelItem => item.DTaskPriority.Name)
+    </td>
+    <td>
+        @Html.DisplayFor(modelItem => item.DTaskStatus.Name)
+    </td>
+    <td>
+        @Html.DisplayFor(modelItem => item.OwnerUser.FullName)
+    </td>
+    <td>
+        @Html.DisplayFor(modelItem => item.DeveloperUser.FullName)
+    </td>
+    <td>
+        <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+        <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+        @if (item.Archived)
+        {
+<a asp-action="Restore" asp-route-id="@item.Id">Restore</a> }
+                else
+                {
+<a asp-action="Archive" asp-route-id="@item.Id">Archive</a>                }
+        @*<a asp-action="Archive" asp-route-id="@item.Id">Archive</a>*@
+    </td>
+</tr>}
+    </tbody>
+</table>

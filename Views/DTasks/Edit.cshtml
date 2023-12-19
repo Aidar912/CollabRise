@@ -1,0 +1,54 @@
+@model Dsana.Models.DTask
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit Task</h1>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="ProjectId" />
+            <input type="hidden" asp-for="Created" />
+            <input type="hidden" asp-for="OwnerUserId" />
+            <input type="hidden" asp-for="DeveloperUserId" />
+            <input type="hidden" asp-for="Archived" />
+
+            <div class="form-group">
+                <label asp-for="Title" class="control-label"></label>
+                <input asp-for="Title" class="form-control" />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Description" class="control-label"></label>
+                <input asp-for="Description" class="form-control" />
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Type</label>
+                <select asp-for="DTaskTypeId" class="form-control" asp-items="ViewBag.DTaskTypeId"></select>
+                <span asp-validation-for="DTaskTypeId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Priority</label>
+                <select asp-for="DTaskPriorityId" class="form-control" asp-items="ViewBag.DTaskPriorityId"></select>
+                <span asp-validation-for="DTaskPriorityId" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label class="control-label">Status</label>
+                <select asp-for="DTaskStatusId" class="form-control" asp-items="ViewBag.DTaskStatusId"></select>
+                <span asp-validation-for="DTaskStatusId" class="text-danger"></span>
+            </div>
+            <div class="form-group my-3">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

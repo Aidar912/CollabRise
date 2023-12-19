@@ -1,0 +1,22 @@
+﻿@using Microsoft.AspNetCore.Identity
+
+@inject UserManager<DSUser> UserManager
+@inject SignInManager<DSUser> SignInManager
+
+@{
+    ViewData["Title"] = "Home Page";
+    DSUser btUser = await UserManager.GetUserAsync(User);
+
+}
+
+
+<div style="display: flex; height: 100%">
+    <div style="margin: auto">
+        <h1>@($"{DateTime.Today.DayOfWeek},  {DateTime.Now.ToString("MMMM")} {DateTime.Now.Day}")</h1>
+        @if (SignInManager.IsSignedIn(User))
+        {
+            <h2 class="display-4">Welcome, @btUser.FirstName </h2>
+        }
+    </div>
+
+</div>

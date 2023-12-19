@@ -1,0 +1,217 @@
+﻿@model Dsana.Models.ViewModels.DashboardViewModel
+@using Microsoft.AspNetCore.Identity
+@using Dsana.Services.Interfaces
+@using Dsana.Models.Enums
+@using Microsoft.AspNetCore.Identity
+
+@inject UserManager<DSUser> UserManager
+@inject SignInManager<DSUser> SignInManager
+@inject IDSRolesService RolesService
+<!-- Styles -->
+<style>
+
+    #chartdiv {
+        width: 100%;
+        height: 500px;
+    }
+</style>
+
+
+@{
+    ViewData["Title"] = "Dashboard";
+    DSUser dsUser = await UserManager.GetUserAsync(User);
+}
+
+
+<div>
+    <div>
+        <h1>@($"{DateTime.Today.DayOfWeek},  {DateTime.Now.ToString("MMMM")} {DateTime.Now.Day}")</h1>
+        @if (SignInManager.IsSignedIn(User))
+        {
+            <h2 class="display-4">Welcome, @dsUser.FirstName </h2>
+        }
+    </div>
+
+</div>
+
+<strong>@dsUser.FullName</strong>
+<span class="text-muted" style="font-size:x-small;">
+    <strong>@Model.Company.Name</strong>
+</span>
+
+
+<div>
+    <div classxfont-weighteighteightgetainer-fluid">
+
+        <div class="row mt-2">
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <a asp-action="AllProjects" asp-controller="Projects" style="text-decoration:none">
+                    <div class="card text-center bg-info">
+                        <div class="body">
+                            <div class="p-15 text-light">
+                                <h3>@Model.Projects.Where(p => p.StartDate < DateTime.Now && p.EndDate > DateTime.Now).Count()</h3>
+                                <span>Active Projects</span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-lg-3 col-md-6 col-sm-6">
+                <div class="card text-center bg-warning">
+                    <div class="body">
+                        <div class="p-15 text-light">
+                            <h3>@Model.DTasks.Where(t => string.IsNullOrEmpty(t.DeveloperUserId)).Count()</h3>
+                            <span>Unassigned Tasks</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="row gy-2">
+            <div class="col-md-12 col">
+                <div class="row col-cols-4 mt-5">
+                    <div class="card col m-1 p-2">
+                        <div class="card-body">
+                            <h5>Projects by Priority</h5>
+                            <div id="chart3D"></div>
+                        </div>
+                    </div>
+                    <div class="card col m-1 p-2">
+                        <div class="card-body">
+                            <h5>Project Tasks Count (%)</h5>
+                            <div id="donut"></div>
+                        </div>
+                    </div>
+                    <div class="card col m-1 p-2">
+                        <div class="card-body">
+                            <h5>Tasks by Priority</h5>
+                            <div class="col-md-12">
+                                <div id="legend" class="donut-legend" style="font-size:x-small"></div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="chart chart-md" id="morrisDTaskPriority"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+@section scripts{
+    <!--Google Charts (2) -->
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script type="text/javascript">google.load("visualization", "1", { packages: ["corechart"] });
+        google.setOnLoadCallback(drawChart);
+        function drawChart() {
+            $.ajax({
+                type: "POST",
+                url: "/Home/GglProjectPriority",
+                data: '{}',
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (result) {
+                    var data = google.visualization.arrayToDataTable(result);
+
+                    //3D Pie
+                    var options = {
+                        title: 'Project Priority',
+                        is3D: true,
+                        chartArea: { left: 0, bottom: 15, width: '100%', height: '100%' },
+                        legend: { position: 'bottom' }
+
+                    };
+
+                    var chart = new google.visualization.PieChart($("#chart3D")[0]);
+                    chart.draw(data, options);
+                },
+                failure: function (rresult) {
+                    alert(result.d);
+                },
+                error: function (result) {
+                    alert(result.d);
+                }
+            });
+        }</script>
+
+    <script type="text/javascript">google.load("visualization", "1", { packages: ["corechart"] });
+        google.setOnLoadCallback(drawChart);
+        function drawChart() {
+            $.ajax({
+                type: "POST",
+                url: "/Home/GglProjectPriority",
+                data: '{}',
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (result) {
+                    var data = google.visualization.arrayToDataTable(result);
+
+                    //Donut
+                    var options = {
+                        title: 'Company Task Distribution',
+                        pieHole: 0.3,
+                        chartArea: { left: 0, bottom: 15, width: '100%', height: '100%' },
+                        legend: { position: 'bottom' }
+                    };
+                    var chart = new google.visualization.PieChart($("#donut")[0]);
+                    chart.draw(data, options);
+                },
+                failure: function (rresult) {
+                    alert(result.d);
+                },
+                error: function (result) {
+                    alert(result.d);
+                }
+            });
+        }</script>
+
+
+        @* Morris Donut Chart *@
+        <script src="//cdnjs.cloudflare.com/ajax/libs/raphael/2.1.0/raphael-min.js"></script>
+        <script src="//cdnjs.cloudflare.com/ajax/libs/morris.js/0.5.1/morris.min.js"></script>
+        <script>
+
+	    var morrisDonutData = [{
+		    label: "Low",
+		    value: @Model.DTasks.Where(t=>t.DTaskPriority.Name == nameof(DSDTaskPriority.Low)).Count()
+	    }, {
+		    label: "Medium",
+		    value: @Model.DTasks.Where(t=>t.DTaskPriority.Name == nameof(DSDTaskPriority.Medium)).Count()
+	    }, {
+		    label: "High",
+		    value: @Model.DTasks.Where(t=>t.DTaskPriority.Name == nameof(DSDTaskPriority.High)).Count()
+	    }, {
+		    label: "Urgent",
+		    value: @Model.DTasks.Where(t=>t.DTaskPriority.Name == nameof(DSDTaskPriority.Urgent)).Count()
+	    }];
+
+
+	    /*
+	    Morris Donut
+	    */
+	    if ($('#morrisDTaskPriority').get(0)) {
+		    var donutChart = Morris.Donut({
+			    resize: true,
+			    element: 'morrisDTaskPriority',
+			    data: morrisDonutData,
+			    colors: ['#0088cc', '#734ba9', '#E36159', '#ff993b']
+		    });
+
+		    donutChart.options.data.forEach(function(label, i) {
+			    var legendItem = $('<span></span>').text( label['label'] + ": " +label['value']).prepend('<span>&nbsp;</span>');
+			    legendItem.find('span')
+			        .css('backgroundColor', donutChart.options.colors[i])
+			        .css('width', '20px')
+			        .css('display', 'inline-block')
+			        .css('margin', '10px');
+			    $('#legend').append(legendItem)
+		    });
+	    };
+    </script>
+}
+
+

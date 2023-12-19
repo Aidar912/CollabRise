@@ -1,0 +1,283 @@
+@model Dsana.Models.Project
+
+@using Dsana.Models.Enums
+@using Dsana.Services.Interfaces
+@using Microsoft.AspNetCore.Identity
+
+@inject UserManager<DSUser> UserManager
+@inject IDSProjectService ProjectService
+@inject IDSDTaskHistoryService HistoryService
+
+
+@{
+    ViewData["Title"] = "Details";
+
+    DSUser btUser = await UserManager.GetUserAsync(User);
+    DSUser projectManager = await ProjectService.GetProjectManagerAsync(Model.Id);
+
+}
+
+
+<div class="row d-flex my-5">
+    <div class="w-50 text-center mx-auto">
+        <h1>Project Details</h1>
+    </div>
+</div>
+
+
+<div>
+    <div class="container-fluid">
+        <div class="row gy-2">
+            <div class="col-md-12 col">
+                <div class="row col-cols-2 mt-5">
+                    <div class="card col m-1 p-2">
+                        <div class="body">
+                            <h5>Project Name: </h5><span>@Model.Name</span>
+                            <h5>Description: </h5><span>@Model.Description</span>
+                            <div class="progress-container">
+                                <span class="progress-badge mx-50 text-center" style="font-size:small;">Project Status</span>
+                                <div class="progress">
+
+
+
+
+                                    @{ var start = Model.StartDate.DateTime;
+                                        var end = Model.EndDate.DateTime;
+                                        var today = DateTime.Now;
+                                        var percent = today >= end ? 100 : today < start ? 0 : Math.Round((today.Subtract(start)) / (end.Subtract(start)) * 100); }
+                                    @*<div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: 100%;">*@
+                                    <div class="progress-bar" role="progressbar" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100" style="width: @percent%;">
+                                        @* Use Progress Bar code variable here *@
+                                        <span class="progress-value">@percent%</span>
+
+
+
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card col m-1 p-2">
+
+
+
+                        <div class="body">
+                            <ul class=" list-unstyled basic-list">
+                                <li>Start Date: <span class="">@Model.StartDate.ToString("dd MMM, yyyy")</span></li>
+                                <li>Deadline: <span class="">@Model.EndDate.ToString("dd MMM, yyyy")</span></li>
+                                <li>Priority: <span class="">@Model.ProjectPriority?.Name</span></li>
+                                @* if() logic *@
+                                @if (today < end && today >= start)
+                                {
+                                <li>Status:<span class="">Active</span></li>
+                                     }
+                                    else
+                                    {
+                                     <li>Status:<span class="" style="color: red">OVERDUE</span></li>
+                                    }
+
+
+                            </ul>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <a asp-action="Edit" asp-controller="Projects" asp-route-id="@Model.Id">Edit Project</a>
+
+            <div class="col-md-4 col mt-5 ">
+                <div>
+                    <div class="card m-1 p-2">
+                        <div class="header mx-50 text-center">
+                            <h2>Project Manager</h2>
+                            <hr />
+                        </div>
+                        <div class="body" style="overflow-y:auto;height:300px;">
+                            @if (projectManager != null)
+                            {
+                <div>
+                    @if (projectManager.AvatarFileData != null)
+                    {
+        <img class="rounded-circle" src="data:image/*;base64,@(Convert.ToBase64String(projectManager.AvatarFileData))" alt="" /> }
+    else
+    {
+        <img class="rounded-circle" style="width:60px;height:60px;" src="https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png" alt="" />}
+                </div>
+                                <div>
+                                    <h5>@projectManager.FullName</h5>
+                                </div> }
+                                            else
+                                            {
+                                <div>
+                                    <img class="rounded-circle" style="width:60px;height:60px;" src="https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png" alt="" />
+                                    <div class="wid-u-info">
+                                        <h5 class="text-muted m-b-0">Not Assigned</h5>
+                                        @if (User.IsInRole(nameof(Roles.Admin)))
+                                        {
+                        <span><a asp-action="AssignProjectManager" asp-controller="Projects" asp-route-id="@Model.Id" class="btn btn-xs btn-outline-info">Assign PM</a></span>}
+
+                                    </div>
+                                </div>}
+
+
+
+                            @* if() logic for Avatar/Default etc *@
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col mt-5 ">
+                <div>
+                    <div class="card m-1 p-2">
+                        <div class="header mx-50 text-center">
+                            <h2>Team</h2>
+                            <hr />
+                        </div>
+                        <div class="body" style="overflow-y:auto;height:300px;">
+                            @if (User.IsInRole(nameof(Roles.Admin)) || (btUser.Id == projectManager.Id))
+                            {
+                <a class="btn btn-xs alert-primary" style="font:small" asp-action="AssignMembers" asp-controller="Projects" asp-route-projectId="@Model.Id">Manage Team</a>}
+                            <ul class="right_chat list-unstyled mb-0">
+
+                                @foreach (DSUser member in await ProjectService.GetAllProjectMembersExceptPMAsync(Model.Id))
+                                {
+                    <li class="">
+                        <a href="">
+                            <div class="media">
+                                @if (member.AvatarFileData != null)
+                                {
+                <img class="" src="data:image/*;base64,@(Convert.ToBase64String(member.AvatarFileData))" alt="" /> }
+            else
+            {
+        <img class="" src="https://cdn.icon-icons.com/icons2/1378/PNG/512/avatardefault_92824.png" alt="" />}
+
+                            </div>
+                        </a>
+                        <div class="">
+                            <span>@member.FullName</span>
+                        </div>
+                    </li>
+}
+                                @* Logic for avatars *@
+                            </ul>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 col mt-5 ">
+                <div>
+                    <div class="card m-1 p-2">
+                        <div class="header mx-50 text-center">
+                            <h2>History</h2>
+                            <hr />
+                        </div>
+                        <div class="body" style="overflow-y:auto;height:300px">
+
+
+
+                            @* Project Activity loop *@
+                            @foreach (DTaskHistory history in await HistoryService.GetProjectDTaskHistoriesAsync(Model.Id, btUser.CompanyID))
+                            {
+                <div class="">
+                    <span class="data">@history.Created.ToString("dd MMM yyy")</span>
+                    <h5>@history.Description</h5>
+                    <span>By: <a href="" title="@history.User.FullName">@history.User.FullName</a></span>
+                    <div class="">
+                        <p>The task <b>@history.Property</b> was edited</p>
+                        <p>@($"Previous {history.Property}: {history.OldValue}")</p>
+                        <p>@($"Current {history.Property}: {history.NewValue}")</p>
+                    </div>
+                </div>}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+
+
+            
+
+
+            <div class="col-md-12 col">
+                <div class="mt-5">
+                    <div class="card m-1 p-2">
+                        <div class="header mx-50 text-center">
+                            <h2>Tasks</h2>
+                            <a asp-action="Create" asp-controller="DTasks">Add New Task</a>
+                        </div>
+                        <div class="body">
+                            <div class="table-responsive" style="overflow-y:auto;height:600px;">
+                                <table class="table table-hover">
+                                    <thead class="">
+                                        <tr>
+
+
+
+                                            @* Table header *@
+                                            <th>Title</th>
+                                            <th>Assigned To</th>
+                                            <th>Status</th>
+                                            <th>Priority</th>
+                                            <th>Due</th>
+                                            <th>   </th>
+
+
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @* Table body *@
+                                        @foreach (var dtask in Model.DTasks.OrderByDescending(d => d.Created))
+                                        {
+                            <tr>
+                                <td><a asp-action="Details" asp-controller="DTasks" asp-route-id="@dtask.Id" style="color:black"><strong>@dtask.Title</strong></a> </td>
+                                <td>
+                                    @if (dtask.DeveloperUserId != null)
+                                    {
+                    @dtask.DeveloperUser?.FullName }
+                else
+                {
+                    if (User.IsInRole(nameof(Roles.Admin)) || User.IsInRole(nameof(Roles.ProjectManager)))
+                    {
+        <a class="btn btn-xs btn-info" asp-action="AssignDeveloper" asp-controller="DTasks" asp-route-id="@dtask.Id">Assign Task</a>}
+
+}
+                                </td>
+                                @if (dtask.DTaskStatus.Name == "New")
+                                {
+                <td><span class="badge-success">@dtask.DTaskStatus.Name </span></td>
+ }
+            else
+            {
+        <td><span class="badge-primary">@dtask.DTaskStatus.Name </span></td>
+}
+                                <td><span class="badge-warning">@dtask.DTaskPriority.Name </span></td>
+                                <td>@dtask.Created.ToString("MM-dd-yyyy")</td>
+                                <td>
+                                    <a class="btn btn-sm btn-outline-info" asp-action="Details" asp-controller="DTasks" asp-route-id="@dtask.Id"><i class="fs-5 bi-justify"></i></a>
+                                    @if (dtask.DeveloperUserId == btUser.Id || dtask.OwnerUserId == btUser.Id || (projectManager?.Id == btUser.Id) || User.IsInRole(nameof(Roles.Admin)))
+                                    {
+                    <a class="btn btn-sm btn-outline-secondary" asp-action="Edit" asp-controller="DTasks" asp-route-id="@dtask.Id"><i class="fs-5 bi-pencil"></i></a>}
+
+                                    @if (User.IsInRole("Admin") || (projectManager?.Id == btUser.Id))
+                                    {
+                    <a class="btn btn-sm btn-outline-danger"><i class="fs-5 bi-archive"></i></a>}
+                                </td>
+                            </tr>
+}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

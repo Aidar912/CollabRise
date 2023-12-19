@@ -1,0 +1,47 @@
+
+@model Dsana.Models.Company
+@using Dsana.Models.Enums
+@using Microsoft.AspNetCore.Identity;
+
+@inject UserManager<DSUser> UserManager
+
+
+@{ ViewData["Title"] = "Details";
+
+    DSUser btUser = await UserManager.GetUserAsync(User); }
+
+<h1>Company Details</h1>
+
+<div>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Description)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Description)
+        </dd>
+    </dl>
+</div>
+
+@if (User.IsInRole(nameof(Roles.Admin)))
+{
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a>
+</div>
+}
+
+
+@if (User.IsInRole(nameof(Roles.Admin)))
+{
+<div>
+    <a asp-action="ManageUserRoles" asp-controller="UserRoles">Manage User Roles</a>
+</div>
+}
+
